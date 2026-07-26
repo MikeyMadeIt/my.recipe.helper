@@ -10,7 +10,7 @@ const CookMode = (() => {
     return (recipe.ingredients || []).map((i) => `
       <label class="rk-check-item">
         <input type="checkbox" data-cook-ing="${i.id}">
-        <span>${i.qty ?? ''} ${rkEscapeHTML(i.unit || '')} ${rkEscapeHTML(i.name)}</span>
+        <span>${rkFormatQty(i.qty)} ${rkEscapeHTML(i.unit || '')} ${rkEscapeHTML(i.name)}</span>
       </label>`).join('') || '<p class="text-body-secondary">No ingredients listed.</p>';
   }
 
@@ -26,10 +26,11 @@ const CookMode = (() => {
     if (!step) {
       body.innerHTML = `<p class="rk-cook-step-text">This recipe has no instructions yet.</p>`;
     } else {
+      const t = rkParseTimeRange(step.timerMinutes);
       body.innerHTML = `
         <p class="rk-cook-step-text">${rkEscapeHTML(step.text)}</p>
         ${step.image ? `<img src="${step.image}" class="rk-cook-step-img" alt="Step ${stepIndex + 1}">` : ''}
-        ${step.timerMinutes ? `<button class="btn rk-btn-primary rk-ripple mt-3" data-cook-start-timer="${step.timerMinutes}"><i class="bi bi-stopwatch"></i> Start ${step.timerMinutes} min timer</button>` : ''}
+        ${t ? `<button class="btn rk-btn-primary rk-ripple mt-3" data-cook-start-timer="${t.timerValue}"><i class="bi bi-stopwatch"></i> Start ${t.display} timer</button>` : ''}
       `;
     }
     document.getElementById('cookModePrevBtn').disabled = stepIndex === 0;

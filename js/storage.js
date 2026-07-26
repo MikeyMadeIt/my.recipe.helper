@@ -112,6 +112,23 @@ const Storage = (() => {
     Object.values(RK_KEYS).forEach((k) => localStorage.removeItem(k));
   }
 
+  // ---- Diagnostics -----------------------------------------------------
+  function isAvailable() {
+    const testKey = '__rk_storage_test__';
+    try {
+      localStorage.setItem(testKey, '1');
+      const ok = localStorage.getItem(testKey) === '1';
+      localStorage.removeItem(testKey);
+      return ok;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function isFileProtocol() {
+    return typeof location !== 'undefined' && location.protocol === 'file:';
+  }
+
   return {
     getRecipes, saveRecipes,
     getShoppingList, saveShoppingList,
@@ -119,6 +136,7 @@ const Storage = (() => {
     getSettings, saveSettings,
     getTheme, saveTheme,
     exportAll, importAll, resetAll,
+    isAvailable, isFileProtocol,
     KEYS: RK_KEYS,
     DEFAULT_SETTINGS,
   };

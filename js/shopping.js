@@ -64,7 +64,7 @@ const Shopping = (() => {
   function exportList() {
     const list = getList();
     if (!list.length) { Toast.show('Your shopping list is empty', 'warning'); return; }
-    const lines = list.map((i) => `${i.checked ? '[x]' : '[ ]'} ${i.qty || ''} ${i.unit || ''} ${i.name}${i.note ? ` (${i.note})` : ''}`.replace(/\s+/g, ' ').trim());
+    const lines = list.map((i) => `${i.checked ? '[x]' : '[ ]'} ${rkFormatQty(i.qty)} ${i.unit || ''} ${i.name}${i.note ? ` (${i.note})` : ''}`.replace(/\s+/g, ' ').trim());
     const text = `Shopping List — ${new Date().toLocaleDateString()}\n\n${lines.join('\n')}`;
     const blob = new Blob([text], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
@@ -82,7 +82,7 @@ const Shopping = (() => {
       <label class="rk-check-item flex-grow-1">
         <input type="checkbox" ${item.checked ? 'checked' : ''} data-toggle-shop="${item.id}">
         <span>
-          <strong>${item.qty || ''} ${rkEscapeHTML(item.unit || '')}</strong> ${rkEscapeHTML(item.name)}
+          <strong>${rkFormatQty(item.qty)} ${rkEscapeHTML(item.unit || '')}</strong> ${rkEscapeHTML(item.name)}
           ${item.recipeName ? `<small class="d-block text-body-secondary">from ${rkEscapeHTML(item.recipeName)}</small>` : ''}
         </span>
       </label>

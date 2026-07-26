@@ -99,6 +99,15 @@ a { text-decoration: none; }
   box-shadow: var(--rk-shadow-soft);
 }
 
+/* ---------------- Storage warning banner ---------------- */
+#storageWarningBanner {
+  position: sticky; top: 0; z-index: 1050; display: flex; align-items: center; gap: 10px;
+  padding: 10px 18px; background: linear-gradient(90deg, #e0637a, #e8863b); color: #1a1305; font-size: .85rem; font-weight: 500;
+}
+#storageWarningBanner i.bi-exclamation-triangle-fill { font-size: 1rem; flex-shrink: 0; }
+#storageWarningBanner span { flex-grow: 1; }
+#storageWarningBanner button { border: none; background: rgba(0,0,0,0.12); color: #1a1305; width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; }
+
 /* ---------------- Loading screen ---------------- */
 #loadingScreen {
   position: fixed; inset: 0; z-index: 3000;

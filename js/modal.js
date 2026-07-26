@@ -25,7 +25,7 @@ const RecipeModal = (() => {
       <div class="rk-builder-row-grip"><i class="bi bi-grip-vertical"></i></div>
       <div class="row g-2 flex-grow-1 align-items-center">
         <div class="col-3 col-md-2">
-          <input type="number" step="any" min="0" class="form-control form-control-sm rk-ing-qty" placeholder="Qty" value="${ing.qty ?? ''}">
+          <input type="text" inputmode="decimal" class="form-control form-control-sm rk-ing-qty" placeholder="e.g. 1/2" value="${ing.qty !== undefined && ing.qty !== '' ? rkFormatQty(ing.qty) : ''}">
         </div>
         <div class="col-4 col-md-3">
           <select class="form-select form-select-sm rk-ing-unit">
@@ -61,7 +61,9 @@ const RecipeModal = (() => {
     const id = row.dataset.ingId;
     const ing = ingredients.find((i) => i.id === id);
     if (!ing) return;
-    ing.qty = row.querySelector('.rk-ing-qty').value;
+    const rawQty = row.querySelector('.rk-ing-qty').value;
+    const parsedQty = rkParseQty(rawQty);
+    ing.qty = parsedQty !== null ? parsedQty : rawQty.trim();
     const unitSel = row.querySelector('.rk-ing-unit').value;
     ing.unit = unitSel === '__custom__' ? row.querySelector('.rk-ing-unit-custom').value : unitSel;
     ing.name = row.querySelector('.rk-ing-name').value;
@@ -114,7 +116,7 @@ const RecipeModal = (() => {
         <div class="d-flex flex-wrap gap-2 align-items-center">
           <div class="input-group input-group-sm rk-step-time-group">
             <span class="input-group-text"><i class="bi bi-stopwatch"></i></span>
-            <input type="number" min="0" class="form-control rk-step-time" placeholder="Minutes" value="${step.timerMinutes || ''}">
+            <input type="text" inputmode="decimal" class="form-control rk-step-time" placeholder="e.g. 25 or 8-10" value="${step.timerMinutes || ''}">
           </div>
           <label class="btn btn-sm rk-btn-icon rk-ripple mb-0" title="Add step image">
             <i class="bi bi-image"></i>
@@ -144,12 +146,12 @@ const RecipeModal = (() => {
     const step = instructions.find((s) => s.id === id);
     if (!step) return;
     step.text = row.querySelector('.rk-step-text').value;
-    step.timerMinutes = Number(row.querySelector('.rk-step-time').value) || 0;
+    step.timerMinutes = row.querySelector('.rk-step-time').value.trim();
   }
 
   function initInstructionBuilder() {
     document.getElementById('addInstructionBtn')?.addEventListener('click', () => {
-      instructions.push({ id: rkUid('step'), step: instructions.length + 1, text: '', image: '', timerMinutes: 0 });
+      instructions.push({ id: rkUid('step'), step: instructions.length + 1, text: '', image: '', timerMinutes: '' });
       renderInstructions();
       document.querySelector('#instructionBuilder .rk-builder-row-step:last-child .rk-step-text')?.focus();
     });
@@ -393,16 +395,22 @@ const RecipeModal = (() => {
       <li>
         <label class="rk-check-item">
           <input type="checkbox">
-          <span><strong>${i.qty ?? ''} ${rkEscapeHTML(i.unit || '')}</strong> ${rkEscapeHTML(i.name)}${i.note ? ` <em>(${rkEscapeHTML(i.note)})</em>` : ''}</span>
+          <span><strong>${rkFormatQty(i.qty)} ${rkEscapeHTML(i.unit || '')}</strong> ${rkEscapeHTML(i.name)}${i.note ? ` <em>(${rkEscapeHTML(i.note)})</em>` : ''}</span>
         </label>
       </li>`).join('')}</ul>`;
+  }
+
+  function stepTimerButtonHTML(step) {
+    const t = rkParseTimeRange(step.timerMinutes);
+    if (!t) return '';
+    return `<button class="btn btn-sm rk-timer-chip rk-ripple" data-start-timer="${t.timerValue}" data-timer-label="${rkEscapeHTML(step.text.slice(0, 40))}"><i class="bi bi-stopwatch"></i> ${t.display}</button>`;
   }
 
   function instructionListHTML(list) {
     if (!list.length) return '<p class="text-body-secondary">No instructions listed.</p>';
     return `<ol class="rk-view-instructions">${list.map((s) => `
       <li>
-        <p>${rkEscapeHTML(s.text)} ${s.timerMinutes ? `<button class="btn btn-sm rk-timer-chip rk-ripple" data-start-timer="${s.timerMinutes}" data-timer-label="${rkEscapeHTML(s.text.slice(0, 40))}"><i class="bi bi-stopwatch"></i> ${s.timerMinutes} min</button>` : ''}</p>
+        <p>${rkEscapeHTML(s.text)} ${stepTimerButtonHTML(s)}</p>
         ${s.image ? `<img src="${s.image}" class="rk-step-view-img" alt="Step ${s.step}">` : ''}
       </li>`).join('')}</ol>`;
   }
@@ -517,9 +525,12 @@ const PrintRecipe = (() => {
       <p class="print-meta">${rkEscapeHTML(r.category)} · Prep ${rkFormatTime(r.prepTime)} · Cook ${rkFormatTime(r.cookTime)} · Serves ${servings || r.servings} · ${r.difficulty}</p>
       ${r.description ? `<p class="print-desc">${rkEscapeHTML(r.description)}</p>` : ''}
       <h2>Ingredients</h2>
-      <ul>${scaled.map((i) => `<li>${i.qty ?? ''} ${rkEscapeHTML(i.unit || '')} ${rkEscapeHTML(i.name)}${i.note ? ` (${rkEscapeHTML(i.note)})` : ''}</li>`).join('')}</ul>
+      <ul>${scaled.map((i) => `<li>${rkFormatQty(i.qty)} ${rkEscapeHTML(i.unit || '')} ${rkEscapeHTML(i.name)}${i.note ? ` (${rkEscapeHTML(i.note)})` : ''}</li>`).join('')}</ul>
       <h2>Instructions</h2>
-      <ol>${(r.instructions || []).map((s) => `<li>${rkEscapeHTML(s.text)}${s.timerMinutes ? ` (${s.timerMinutes} min)` : ''}</li>`).join('')}</ol>
+      <ol>${(r.instructions || []).map((s) => {
+        const t = rkParseTimeRange(s.timerMinutes);
+        return `<li>${rkEscapeHTML(s.text)}${t ? ` (${t.display})` : ''}</li>`;
+      }).join('')}</ol>
       ${r.notes ? `<h2>Notes</h2><p>${rkEscapeHTML(r.notes)}</p>` : ''}
     `;
     window.print();

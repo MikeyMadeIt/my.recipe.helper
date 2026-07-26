@@ -23,6 +23,11 @@
 <link rel="stylesheet" href="css/animations.css">
 
 <link rel="manifest" href="manifest.json">
+<link rel="icon" href="assets/icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Recipes">
 </head>
 <body>
 
@@ -34,6 +39,13 @@
 
 <!-- ================= Toasts ================= -->
 <div id="toastStack" aria-live="polite" aria-atomic="true"></div>
+
+<!-- ================= Storage warning banner ================= -->
+<div id="storageWarningBanner" class="d-none">
+  <i class="bi bi-exclamation-triangle-fill"></i>
+  <span>Your browser isn't saving data between visits — recipes will reset on refresh. This usually happens when the app is opened directly as a file, or in a private/incognito window. Serve it from a local web server (see README) to fix this.</span>
+  <button type="button" id="storageWarningClose" aria-label="Dismiss"><i class="bi bi-x-lg"></i></button>
+</div>
 
 <!-- ================= Navbar ================= -->
 <nav class="navbar navbar-expand-lg rk-navbar">
@@ -55,6 +67,9 @@
         <li class="nav-item"><a class="nav-link rk-nav-link" href="#" data-section-target="settings"><i class="bi bi-gear me-1"></i>Settings</a></li>
       </ul>
       <div class="d-flex align-items-center gap-2">
+        <button id="installAppBtn" class="rk-btn-outline rk-ripple d-none" type="button">
+          <i class="bi bi-download me-1"></i>Install App
+        </button>
         <button id="themeToggleBtn" class="rk-icon-btn" type="button" aria-label="Toggle theme">
           <i id="themeToggleIcon" class="bi bi-moon-stars-fill"></i>
         </button>

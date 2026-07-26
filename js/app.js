@@ -155,6 +155,75 @@ function rkDifficultyBadgeClass(diff) {
   return { Easy: 'rk-badge-easy', Medium: 'rk-badge-medium', Hard: 'rk-badge-hard' }[diff] || 'rk-badge-easy';
 }
 
+/* ---------------- Quantity fractions (1/2, 1/4, 1 1/2 …) ---------------- */
+const RK_COMMON_FRACTIONS = [[1,8],[1,4],[1,3],[3,8],[1,2],[5,8],[2,3],[3,4],[7,8]];
+
+// Accepts "1/2", "1 1/2", "0.5", "2" (typed by the user) and returns a number, or null.
+function rkParseQty(raw) {
+  if (raw === null || raw === undefined) return null;
+  const str = String(raw).trim();
+  if (str === '') return null;
+
+  let m = str.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/); // mixed number: "1 1/2"
+  if (m) {
+    const whole = parseInt(m[1], 10), num = parseInt(m[2], 10), den = parseInt(m[3], 10);
+    return den ? whole + num / den : whole;
+  }
+  m = str.match(/^(\d+)\s*\/\s*(\d+)$/); // simple fraction: "1/2"
+  if (m) {
+    const num = parseInt(m[1], 10), den = parseInt(m[2], 10);
+    return den ? num / den : null;
+  }
+  const val = parseFloat(str);
+  return isNaN(val) ? null : val;
+}
+
+// Formats a number as a friendly cooking fraction: 0.5 -> "1/2", 1.75 -> "1 3/4".
+// Falls back to a plain (rounded) number when it isn't close to a common fraction.
+function rkFormatQty(value) {
+  if (value === null || value === undefined || value === '') return '';
+  const num = typeof value === 'number' ? value : rkParseQty(value);
+  if (num === null || isNaN(num)) return String(value);
+
+  const sign = num < 0 ? '-' : '';
+  const abs = Math.abs(num);
+  const whole = Math.floor(abs);
+  const frac = abs - whole;
+
+  if (frac < 0.01) return `${sign}${whole}`;
+
+  let best = null;
+  let bestDiff = 0.02;
+  RK_COMMON_FRACTIONS.forEach(([n, d]) => {
+    const diff = Math.abs(frac - n / d);
+    if (diff < bestDiff) { bestDiff = diff; best = `${n}/${d}`; }
+  });
+
+  if (best) return `${sign}${whole > 0 ? `${whole} ` : ''}${best}`;
+  return `${sign}${Math.round(abs * 100) / 100}`;
+}
+
+/* ---------------- Instruction step time (supports "8-10" ranges) ---------------- */
+// Accepts a plain number ("25") or a range ("8-10") and returns
+// { display: "25 min" | "8-10 min", timerValue: <number to start a timer with> }
+function rkParseTimeRange(raw) {
+  if (raw === null || raw === undefined || raw === '') return null;
+  const str = String(raw).trim();
+  if (!str) return null;
+
+  const range = str.match(/^(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)$/);
+  if (range) {
+    const min = parseFloat(range[1]);
+    const max = parseFloat(range[2]);
+    if (isNaN(min) || isNaN(max)) return null;
+    return { min, max, display: `${range[1]}-${range[2]} min`, timerValue: Math.round((min + max) / 2) };
+  }
+
+  const single = parseFloat(str);
+  if (isNaN(single) || single <= 0) return null;
+  return { min: single, max: single, display: `${str} min`, timerValue: single };
+}
+
 /* ---------------------------- Recipe card / grid rendering --------------------------- */
 function recipeCardHTML(r) {
   const img = r.image
@@ -380,6 +449,58 @@ const RecentlyCookedView = (() => {
 })();
 document.addEventListener('rk:recipes-changed', () => { FavoritesView.render(); RecentlyCookedView.render(); });
 
+/* ---------------- Storage diagnostics banner ---------------- */
+function initStorageWarning() {
+  const banner = document.getElementById('storageWarningBanner');
+  if (!banner) return;
+  const available = Storage.isAvailable();
+  const isFile = Storage.isFileProtocol();
+
+  if (!available || isFile) {
+    const span = banner.querySelector('span');
+    if (!available) {
+      span.textContent = "Your browser is blocking saved data here (often private/incognito mode) — recipes will reset on refresh. Switch to a normal browser window to keep your data.";
+    } else if (isFile) {
+      span.textContent = "You're opening this file directly, which some browsers won't reliably save data for and can't install as an app. Serve the folder from a local web server instead (see README.md) — your data will then persist normally.";
+    }
+    banner.classList.remove('d-none');
+  }
+  document.getElementById('storageWarningClose')?.addEventListener('click', () => banner.classList.add('d-none'));
+}
+
+/* ---------------- PWA install prompt ---------------- */
+function initInstallPrompt() {
+  const btn = document.getElementById('installAppBtn');
+  if (!btn) return;
+  let deferredPrompt = null;
+
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if (isStandalone) return;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    btn.classList.remove('d-none');
+  });
+
+  btn.addEventListener('click', async () => {
+    if (!deferredPrompt) {
+      Toast.show('Your browser will show an install option in its menu (look for "Install app" or "Add to Home Screen").', 'info', 5000);
+      return;
+    }
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') Toast.show('Recipe Keeper installed 🎉', 'success');
+    deferredPrompt = null;
+    btn.classList.add('d-none');
+  });
+
+  window.addEventListener('appinstalled', () => {
+    btn.classList.add('d-none');
+    Toast.show('Recipe Keeper installed 🎉', 'success');
+  });
+}
+
 /* ---------------------------- Init --------------------------- */
 document.addEventListener('DOMContentLoaded', () => {
   Recipes.seedIfEmpty();
@@ -389,6 +510,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initGridDelegation();
   initSectionNav();
   initFAB();
+  initStorageWarning();
+  initInstallPrompt();
   RecipeModal.init();
   Search.init();
   FilterSort.init();

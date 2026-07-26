@@ -185,7 +185,7 @@ const Recipes = (() => {
         ],
         instructions: [
           { id: rkUid('step'), step: 1, text: 'Melt butter in a pan over medium heat, add garlic until fragrant.', image: '', timerMinutes: 2 },
-          { id: rkUid('step'), step: 2, text: 'Add shrimp and bell pepper, cook until shrimp turns pink.', image: '', timerMinutes: 5 },
+          { id: rkUid('step'), step: 2, text: 'Add shrimp and bell pepper, cook until shrimp turns pink.', image: '', timerMinutes: '5-7' },
         ],
         notes: '',
         tags: ['Quick', 'Easy', 'Spicy'],
