@@ -1,0 +1,11 @@
+{
+  "name": "Recipe Keeper",
+  "short_name": "Recipes",
+  "description": "Your personal, offline-first recipe keeper.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f101a",
+  "theme_color": "#0f101a",
+  "orientation": "portrait-primary",
+  "icons": []
+}

@@ -1,0 +1,60 @@
+/* ==========================================================================
+   animations.css — keyframes & motion utility classes
+   ========================================================================== */
+
+@keyframes rk-fade-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.rk-fade-in { animation: rk-fade-in 420ms cubic-bezier(.4,0,.2,1) both; }
+.rk-fade-in:nth-child(2n) { animation-delay: 40ms; }
+.rk-fade-in:nth-child(3n) { animation-delay: 80ms; }
+.rk-fade-in:nth-child(4n) { animation-delay: 120ms; }
+
+@keyframes rk-loader-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+@keyframes rk-fab-breathe {
+  0%, 100% { box-shadow: 0 16px 34px -10px var(--rk-accent-2); }
+  50% { box-shadow: 0 16px 44px -6px var(--rk-accent-2); }
+}
+
+@keyframes rk-pulse-icon {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .45; }
+}
+
+@keyframes rk-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Ripple */
+.rk-ripple-effect {
+  position: absolute; border-radius: 50%; transform: scale(0);
+  background: rgba(255,255,255,0.55); pointer-events: none;
+  animation: rk-ripple-anim 550ms ease-out;
+}
+[data-rk-theme="light"] .rk-ripple-effect { background: rgba(0,0,0,0.18); }
+@keyframes rk-ripple-anim {
+  to { transform: scale(2.6); opacity: 0; }
+}
+
+/* Modal transitions feel snappier */
+.modal.fade .modal-dialog { transition: transform 260ms cubic-bezier(.4,0,.2,1), opacity 260ms ease; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+}
+
+/* Disable animations toggle (Settings > Enable Animations) */
+.rk-no-animations * { animation: none !important; transition: none !important; }
+
+/* Focus visibility for accessibility */
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+  outline: 2px solid var(--rk-accent-1);
+  outline-offset: 2px;
+}

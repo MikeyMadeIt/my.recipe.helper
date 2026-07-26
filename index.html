@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Recipe Keeper — Your Personal Cookbook</title>
+<meta name="description" content="An offline-first personal recipe keeper — store, organize, and cook your recipes.">
+<meta name="theme-color" content="#0f101a">
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Bootstrap 5.3 -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+<!-- App styles -->
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/responsive.css">
+<link rel="stylesheet" href="css/animations.css">
+
+<link rel="manifest" href="manifest.json">
+</head>
+<body>
+
+<!-- ================= Loading screen ================= -->
+<div id="loadingScreen">
+  <div class="rk-loader-mark"><i class="bi bi-egg-fried"></i></div>
+  <div class="rk-loader-text">Preheating your cookbook…</div>
+</div>
+
+<!-- ================= Toasts ================= -->
+<div id="toastStack" aria-live="polite" aria-atomic="true"></div>
+
+<!-- ================= Navbar ================= -->
+<nav class="navbar navbar-expand-lg rk-navbar">
+  <div class="container-fluid px-3 px-lg-4">
+    <a class="navbar-brand rk-brand" href="#" data-section-target="dashboard">
+      <span class="rk-brand-mark"><i class="bi bi-journal-richtext"></i></span>
+      Recipe Keeper
+    </a>
+    <button class="navbar-toggler rk-icon-btn border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navCollapse" aria-label="Toggle navigation">
+      <i class="bi bi-list fs-4"></i>
+    </button>
+    <div class="collapse navbar-collapse" id="navCollapse">
+      <ul class="navbar-nav mx-lg-auto my-2 my-lg-0 gap-lg-1">
+        <li class="nav-item"><a class="nav-link rk-nav-link active" href="#" data-section-target="dashboard"><i class="bi bi-grid-1x2 me-1"></i>Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link rk-nav-link" href="#" data-section-target="favorites"><i class="bi bi-heart me-1"></i>Favorites</a></li>
+        <li class="nav-item"><a class="nav-link rk-nav-link" href="#" data-section-target="recently-cooked"><i class="bi bi-clock-history me-1"></i>Recently Cooked</a></li>
+        <li class="nav-item"><a class="nav-link rk-nav-link" href="#" data-section-target="planner"><i class="bi bi-calendar-week me-1"></i>Meal Planner</a></li>
+        <li class="nav-item"><a class="nav-link rk-nav-link" href="#" data-section-target="shopping"><i class="bi bi-cart3 me-1"></i>Shopping List</a></li>
+        <li class="nav-item"><a class="nav-link rk-nav-link" href="#" data-section-target="settings"><i class="bi bi-gear me-1"></i>Settings</a></li>
+      </ul>
+      <div class="d-flex align-items-center gap-2">
+        <button id="themeToggleBtn" class="rk-icon-btn" type="button" aria-label="Toggle theme">
+          <i id="themeToggleIcon" class="bi bi-moon-stars-fill"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main class="container-fluid px-3 px-lg-4">
+
+  <!-- ================= Dashboard ================= -->
+  <section id="section-dashboard" class="rk-section">
+
+    <div class="rk-hero">
+      <p class="rk-hero-greeting" id="welcomeGreeting">Good day, chef 👋</p>
+      <h1 class="rk-hero-title">Your personal <span class="rk-glow-text">cookbook</span></h1>
+    </div>
+
+    <div class="row g-3 my-2">
+      <div class="col-6 col-lg-3">
+        <div class="rk-glass rk-stat-card rk-fade-in">
+          <div class="rk-stat-icon"><i class="bi bi-journal-bookmark-fill"></i></div>
+          <div><div class="rk-stat-value" id="statTotal">0</div><div class="rk-stat-label">Total Recipes</div></div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="rk-glass rk-stat-card rk-fade-in">
+          <div class="rk-stat-icon"><i class="bi bi-heart-fill"></i></div>
+          <div><div class="rk-stat-value" id="statFavorites">0</div><div class="rk-stat-label">Favorites</div></div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="rk-glass rk-stat-card rk-fade-in">
+          <div class="rk-stat-icon"><i class="bi bi-stars"></i></div>
+          <div><div class="rk-stat-value" id="statRecent">0</div><div class="rk-stat-label">Recently Added</div></div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="rk-glass rk-stat-card rk-fade-in">
+          <div class="rk-stat-icon"><i class="bi bi-fire"></i></div>
+          <div><div class="rk-stat-value" id="statCookedToday">0</div><div class="rk-stat-label">Cooked Today</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 align-items-center my-4">
+      <div class="rk-search-wrap">
+        <i class="bi bi-search"></i>
+        <input type="search" id="searchInput" placeholder="Search recipes, ingredients, tags…" aria-label="Search recipes">
+        <button type="button" id="searchClearBtn" class="rk-search-clear d-none" aria-label="Clear search"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <button class="rk-toolbar-btn rk-ripple" type="button" data-bs-toggle="offcanvas" data-bs-target="#filterOffcanvas">
+        <i class="bi bi-funnel"></i><span>Filter</span>
+        <span class="rk-badge-count d-none" id="filterActiveBadge">0</span>
+      </button>
+      <div class="dropdown">
+        <button class="rk-toolbar-btn rk-ripple dropdown-toggle" type="button" data-bs-toggle="dropdown">
+          <i class="bi bi-sort-down"></i><span id="sortLabel">Newest</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><a class="dropdown-item active" href="#" data-sort-option="newest">Newest</a></li>
+          <li><a class="dropdown-item" href="#" data-sort-option="oldest">Oldest</a></li>
+          <li><a class="dropdown-item" href="#" data-sort-option="name">Name (A–Z)</a></li>
+          <li><a class="dropdown-item" href="#" data-sort-option="cookTime">Cooking Time</a></li>
+          <li><a class="dropdown-item" href="#" data-sort-option="prepTime">Preparation Time</a></li>
+          <li><a class="dropdown-item" href="#" data-sort-option="favorite">Favorite First</a></li>
+          <li><a class="dropdown-item" href="#" data-sort-option="recentlyCooked">Most Recently Cooked</a></li>
+        </ul>
+      </div>
+      <button class="rk-btn-primary rk-ripple d-none d-md-inline-flex ms-auto" type="button" data-action="add-recipe" onclick="RecipeModal.openAdd()">
+        <i class="bi bi-plus-lg me-1"></i> Add Recipe
+      </button>
+    </div>
+
+    <div class="row g-3" id="recipeGrid"></div>
+  </section>
+
+  <!-- ================= Favorites ================= -->
+  <section id="section-favorites" class="rk-section d-none">
+    <div class="rk-section-title"><i class="bi bi-heart-fill fs-4"></i><h2 class="mb-0">Favorite Recipes</h2></div>
+    <div class="row g-3" id="favoritesGrid"></div>
+  </section>
+
+  <!-- ================= Recently Cooked ================= -->
+  <section id="section-recently-cooked" class="rk-section d-none">
+    <div class="rk-section-title"><i class="bi bi-clock-history fs-4"></i><h2 class="mb-0">Recently Cooked</h2></div>
+    <div id="recentlyCookedList"></div>
+  </section>
+
+  <!-- ================= Meal Planner ================= -->
+  <section id="section-planner" class="rk-section d-none">
+    <div class="rk-section-title d-flex flex-wrap justify-content-between w-100">
+      <div class="d-flex align-items-center gap-2"><i class="bi bi-calendar-week fs-4"></i><h2 class="mb-0">Weekly Meal Planner</h2></div>
+      <button class="rk-btn-outline rk-ripple" id="plannerClearWeekBtn" type="button"><i class="bi bi-eraser me-1"></i>Clear Week</button>
+    </div>
+    <div class="rk-planner-grid" id="plannerGrid"></div>
+  </section>
+
+  <!-- ================= Shopping List ================= -->
+  <section id="section-shopping" class="rk-section d-none">
+    <div class="rk-section-title"><i class="bi bi-cart3 fs-4"></i><h2 class="mb-0">Shopping List</h2><span class="text-body-secondary ms-2" id="shoppingCounter"></span></div>
+    <div class="row justify-content-center">
+      <div class="col-12 col-lg-8">
+        <form id="shoppingAddForm" class="d-flex gap-2 mb-3">
+          <input type="text" id="shoppingManualInput" class="form-control" placeholder="Add an item manually…">
+          <button class="rk-btn-primary rk-ripple" type="submit"><i class="bi bi-plus-lg"></i></button>
+        </form>
+        <ul id="shoppingListItems" class="rk-glass p-3"></ul>
+        <div class="d-flex gap-2 justify-content-end mt-3">
+          <button class="rk-btn-outline rk-ripple" id="shoppingExportBtn" type="button"><i class="bi bi-download me-1"></i>Export</button>
+          <button class="rk-btn-outline rk-ripple rk-btn-danger" id="shoppingClearBtn" type="button"><i class="bi bi-trash3 me-1"></i>Clear List</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Settings ================= -->
+  <section id="section-settings" class="rk-section d-none">
+    <div class="rk-section-title"><i class="bi bi-gear fs-4"></i><h2 class="mb-0">Settings</h2></div>
+    <div class="row justify-content-center">
+      <div class="col-12 col-lg-7">
+
+        <div class="rk-glass p-4 mb-3">
+          <h5 class="mb-3">Appearance</h5>
+          <label class="form-label">Theme</label>
+          <div class="d-flex gap-3 mb-3">
+            <label class="rk-check-item"><input type="radio" name="settingsTheme" value="dark"> <span>Dark</span></label>
+            <label class="rk-check-item"><input type="radio" name="settingsTheme" value="light"> <span>Light</span></label>
+          </div>
+          <label class="form-label">Accent Color</label>
+          <div class="d-flex gap-2 mb-1">
+            <button type="button" class="rk-icon-btn" data-accent-option="amber" style="background:linear-gradient(135deg,#f2a93b,#e8863b)"></button>
+            <button type="button" class="rk-icon-btn" data-accent-option="rose" style="background:linear-gradient(135deg,#f2708a,#e0466e)"></button>
+            <button type="button" class="rk-icon-btn" data-accent-option="teal" style="background:linear-gradient(135deg,#4fd0c4,#2ba8a0)"></button>
+            <button type="button" class="rk-icon-btn" data-accent-option="violet" style="background:linear-gradient(135deg,#a98cf5,#7c5cd4)"></button>
+          </div>
+        </div>
+
+        <div class="rk-glass p-4 mb-3">
+          <h5 class="mb-3">Defaults</h5>
+          <div class="row g-3">
+            <div class="col-6">
+              <label class="form-label">Default Measurement Unit</label>
+              <select class="form-select" id="settingsDefaultUnit"></select>
+            </div>
+            <div class="col-6">
+              <label class="form-label">Default Serving Size</label>
+              <input type="number" min="1" class="form-control" id="settingsDefaultServings">
+            </div>
+          </div>
+        </div>
+
+        <div class="rk-glass p-4 mb-3">
+          <h5 class="mb-3">Behavior</h5>
+          <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" id="settingsAnimations">
+            <label class="form-check-label" for="settingsAnimations">Enable animations</label>
+          </div>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="settingsAutoSave">
+            <label class="form-check-label" for="settingsAutoSave">Auto save changes</label>
+          </div>
+        </div>
+
+        <div class="rk-glass p-4 mb-3">
+          <h5 class="mb-3">Backup</h5>
+          <p class="text-body-secondary small mb-3" id="settingsStorageInfo"></p>
+          <div class="d-flex flex-wrap gap-2">
+            <button class="rk-btn-outline rk-ripple" id="settingsExportBtn" type="button"><i class="bi bi-download me-1"></i>Export Backup</button>
+            <label class="rk-btn-outline rk-ripple mb-0" style="cursor:pointer;">
+              <i class="bi bi-upload me-1"></i>Import Backup
+              <input type="file" accept="application/json" id="settingsImportInput" class="d-none">
+            </label>
+          </div>
+        </div>
+
+        <div class="rk-glass p-4 mb-3 border border-danger-subtle">
+          <h5 class="mb-2">Danger Zone</h5>
+          <p class="text-body-secondary small">Permanently erase every recipe, list, and preference on this device.</p>
+          <button class="btn btn-outline-danger rk-ripple" id="settingsResetBtn" type="button"><i class="bi bi-exclamation-triangle me-1"></i>Reset All Data</button>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ================= FAB ================= -->
+<button id="fabAddRecipe" class="rk-fab rk-ripple" type="button" aria-label="Add recipe">
+  <i class="bi bi-plus-lg"></i>
+</button>
+
+<!-- ================= Timer dock ================= -->
+<div id="timerDock" class="d-none"></div>
+
+<!-- ================= Filter Offcanvas ================= -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="filterOffcanvas">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title"><i class="bi bi-funnel me-2"></i>Filter Recipes</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body">
+    <label class="form-label">Category</label>
+    <select class="form-select mb-3" id="filterCategory"></select>
+
+    <label class="form-label">Difficulty</label>
+    <select class="form-select mb-3" id="filterDifficulty">
+      <option value="All">All</option>
+      <option value="Easy">Easy</option>
+      <option value="Medium">Medium</option>
+      <option value="Hard">Hard</option>
+    </select>
+
+    <label class="form-label">Max Preparation Time (min)</label>
+    <input type="number" min="0" class="form-control mb-3" id="filterMaxPrep" placeholder="Any">
+
+    <label class="form-label">Max Cooking Time (min)</label>
+    <input type="number" min="0" class="form-control mb-3" id="filterMaxCook" placeholder="Any">
+
+    <div class="form-check form-switch mb-4">
+      <input class="form-check-input" type="checkbox" id="filterFavoritesOnly">
+      <label class="form-check-label" for="filterFavoritesOnly">Favorites only</label>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button class="rk-btn-primary rk-ripple flex-grow-1" id="filterApplyBtn" type="button">Apply Filters</button>
+      <button class="rk-btn-outline rk-ripple" id="filterResetBtn" type="button">Reset</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= Add / Edit Recipe Modal ================= -->
+<div class="modal fade" id="recipeModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="recipeModalTitle"><i class="bi bi-journal-plus"></i> Add Recipe</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="recipeForm" novalidate>
+        <div class="modal-body">
+
+          <label class="form-label">Recipe Image</label>
+          <label class="rk-image-upload mb-4">
+            <img id="recipeImagePreview" class="d-none" alt="Recipe preview">
+            <div class="rk-image-upload-placeholder" id="recipeImagePlaceholder">
+              <i class="bi bi-camera"></i>
+              <span>Tap to upload a photo</span>
+            </div>
+            <input type="file" accept="image/*" class="d-none" id="recipeImageInput">
+          </label>
+          <button type="button" class="rk-btn-outline rk-ripple btn-sm mb-4" id="removeRecipeImageBtn"><i class="bi bi-trash3 me-1"></i>Remove Image</button>
+
+          <div class="row g-3 mb-1">
+            <div class="col-12 col-md-7">
+              <label class="form-label">Recipe Name *</label>
+              <input type="text" class="form-control" id="recipeName" required placeholder="e.g. Chicken Adobo">
+            </div>
+            <div class="col-12 col-md-5">
+              <label class="form-label">Category *</label>
+              <select class="form-select" id="recipeCategory" required></select>
+              <input type="text" class="form-control mt-2 d-none" id="recipeCategoryCustom" placeholder="Custom category name">
+            </div>
+          </div>
+
+          <div class="mb-3 mt-3">
+            <label class="form-label">Description</label>
+            <textarea class="form-control" id="recipeDescription" rows="2" placeholder="A short, appetizing description…"></textarea>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-4">
+              <label class="form-label">Prep Time (min)</label>
+              <input type="number" min="0" class="form-control" id="recipePrep" value="0">
+            </div>
+            <div class="col-4">
+              <label class="form-label">Cook Time (min)</label>
+              <input type="number" min="0" class="form-control" id="recipeCook" value="0">
+            </div>
+            <div class="col-4">
+              <label class="form-label">Servings</label>
+              <input type="number" min="1" class="form-control" id="recipeServings" value="4">
+            </div>
+          </div>
+
+          <div class="row g-3 mb-4 align-items-end">
+            <div class="col-8">
+              <label class="form-label">Difficulty</label>
+              <select class="form-select" id="recipeDifficulty">
+                <option>Easy</option><option>Medium</option><option>Hard</option>
+              </select>
+            </div>
+            <div class="col-4">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="recipeFavoriteToggle">
+                <label class="form-check-label" for="recipeFavoriteToggle">Favorite</label>
+              </div>
+            </div>
+          </div>
+
+          <hr class="border-secondary-subtle">
+
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <label class="form-label mb-0">Ingredients</label>
+            <button type="button" class="rk-btn-outline rk-ripple btn-sm" id="addIngredientBtn"><i class="bi bi-plus-lg me-1"></i>Add Ingredient</button>
+          </div>
+          <div id="ingredientBuilder" class="mb-4"></div>
+
+          <hr class="border-secondary-subtle">
+
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <label class="form-label mb-0">Instructions</label>
+            <button type="button" class="rk-btn-outline rk-ripple btn-sm" id="addInstructionBtn"><i class="bi bi-plus-lg me-1"></i>Add Step</button>
+          </div>
+          <div id="instructionBuilder" class="mb-4"></div>
+
+          <hr class="border-secondary-subtle">
+
+          <div class="mb-3 mt-3">
+            <label class="form-label">Tags</label>
+            <input type="text" class="form-control mb-2" id="tagInput" placeholder="Type a tag and press Enter…">
+            <div class="mb-2">
+              <span class="text-body-secondary small d-block mb-1">Suggestions:</span>
+              <span id="tagSuggestionList"></span>
+            </div>
+            <div id="tagChipList"></div>
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label">Personal Notes</label>
+            <textarea class="form-control" id="recipeNotes" rows="2" placeholder="e.g. Use less salt. Kids prefer extra cheese."></textarea>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="rk-btn-outline rk-ripple" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="rk-btn-primary rk-ripple"><i class="bi bi-check-lg me-1"></i>Save Recipe</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ================= View Recipe Modal ================= -->
+<div class="modal fade" id="viewRecipeModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="viewRecipeTitle">Recipe Name</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="rk-view-hero mb-3">
+          <img id="viewRecipeImage" alt="Recipe photo" class="d-none">
+          <div id="viewRecipeNoImage" class="rk-card-noimg"><i class="bi bi-egg-fried"></i></div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+          <span class="rk-chip-static" id="viewRecipeCategory">Category</span>
+          <span class="rk-badge-diff" id="viewRecipeDifficulty">Easy</span>
+          <button class="rk-icon-btn ms-auto rk-ripple" id="viewFavoriteBtn" type="button" aria-label="Toggle favorite"><i class="bi bi-heart"></i></button>
+        </div>
+
+        <p id="viewRecipeDescription" class="text-body-secondary"></p>
+
+        <div class="rk-view-meta-grid mb-4">
+          <div class="rk-view-meta-item"><div class="val" id="viewRecipePrep">0 min</div><div class="lbl">Prep Time</div></div>
+          <div class="rk-view-meta-item"><div class="val" id="viewRecipeCook">0 min</div><div class="lbl">Cook Time</div></div>
+          <div class="rk-view-meta-item"><div class="val" id="viewRecipeTotal">0 min</div><div class="lbl">Total Time</div></div>
+          <div class="rk-view-meta-item">
+            <div class="val rk-servings-control">
+              <button type="button" id="viewServingsMinus" aria-label="Decrease servings"><i class="bi bi-dash"></i></button>
+              <span id="viewRecipeServings">4</span>
+              <button type="button" id="viewServingsPlus" aria-label="Increase servings"><i class="bi bi-plus"></i></button>
+            </div>
+            <div class="lbl">Servings</div>
+          </div>
+        </div>
+
+        <h6 class="rk-display">Ingredients</h6>
+        <div id="viewRecipeIngredients" class="mb-4"></div>
+
+        <h6 class="rk-display">Instructions</h6>
+        <div id="viewRecipeInstructions" class="mb-4"></div>
+
+        <h6 class="rk-display">Notes</h6>
+        <p id="viewRecipeNotes" class="text-body-secondary mb-4"></p>
+
+        <h6 class="rk-display">Tags</h6>
+        <div id="viewRecipeTags" class="mb-4"></div>
+
+        <div class="d-flex flex-wrap gap-3 text-body-secondary small">
+          <span><i class="bi bi-calendar-plus me-1"></i>Created: <span id="viewRecipeCreated"></span></span>
+          <span><i class="bi bi-calendar-check me-1"></i>Updated: <span id="viewRecipeUpdated"></span></span>
+        </div>
+      </div>
+      <div class="modal-footer flex-wrap">
+        <button type="button" class="rk-btn-outline rk-ripple" id="viewAddToShoppingBtn"><i class="bi bi-cart-plus me-1"></i>Add to List</button>
+        <button type="button" class="rk-btn-outline rk-ripple" id="viewPrintBtn"><i class="bi bi-printer me-1"></i>Print</button>
+        <button type="button" class="rk-btn-primary rk-ripple" id="viewCookModeBtn"><i class="bi bi-play-fill me-1"></i>Cook Mode</button>
+        <button type="button" class="rk-btn-outline rk-ripple" id="viewEditBtn"><i class="bi bi-pencil me-1"></i>Edit</button>
+        <button type="button" class="btn btn-outline-danger rk-ripple" id="viewDeleteBtn"><i class="bi bi-trash3 me-1"></i>Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= Confirm Modal ================= -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-body text-center p-4">
+        <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size:2.4rem;"></i>
+        <h5 class="mt-3" id="confirmTitle">Are you sure?</h5>
+        <p class="text-body-secondary" id="confirmMessage"></p>
+        <div class="d-flex gap-2 justify-content-center mt-3">
+          <button type="button" class="rk-btn-outline rk-ripple" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger rk-ripple" id="confirmOkBtn">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= Planner Picker Modal ================= -->
+<div class="modal fade" id="plannerPickerModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="plannerPickerTitle">Assign a recipe</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="plannerPickerList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= Cook Mode Overlay ================= -->
+<div id="cookModeOverlay" class="d-none">
+  <div class="rk-cook-header">
+    <div>
+      <div class="text-body-secondary small" id="cookModeCounter">Step 1 of 1</div>
+      <h5 class="mb-0" id="cookModeTitle">Recipe Name</h5>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="rk-icon-btn rk-ripple" id="cookModeFullscreenBtn" type="button" aria-label="Fullscreen"><i class="bi bi-arrows-fullscreen"></i></button>
+      <button class="rk-icon-btn rk-ripple" id="cookModeCloseBtn" type="button" aria-label="Close cook mode"><i class="bi bi-x-lg"></i></button>
+    </div>
+  </div>
+  <div class="rk-cook-progress-track"><div class="rk-cook-progress-fill" id="cookModeProgress"></div></div>
+
+  <div class="row g-0 flex-grow-1 overflow-hidden">
+    <div class="col-lg-3 d-none d-lg-block rk-cook-ingredients-panel p-4">
+      <h6 class="rk-display mb-3">Ingredients</h6>
+      <div id="cookModeIngredientList"></div>
+    </div>
+    <div class="col-lg-9 d-flex flex-column">
+      <div class="rk-cook-body" id="cookModeStepBody"></div>
+      <div class="rk-cook-footer">
+        <button class="rk-btn-outline rk-ripple" id="cookModePrevBtn" type="button"><i class="bi bi-chevron-left me-1"></i>Previous</button>
+        <button class="rk-btn-primary rk-ripple flex-grow-1 flex-lg-grow-0" id="cookModeNextBtn" type="button">Next Step<i class="bi bi-chevron-right ms-1"></i></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= Print area ================= -->
+<div id="printArea"></div>
+
+<!-- Bootstrap bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- App modules -->
+<script src="js/storage.js"></script>
+<script src="js/recipes.js"></script>
+<script src="js/search.js"></script>
+<script src="js/filters.js"></script>
+<script src="js/modal.js"></script>
+<script src="js/planner.js"></script>
+<script src="js/shopping.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/timers.js"></script>
+<script src="js/cookmode.js"></script>
+<script src="js/app.js"></script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
+</script>
+
+</body>
+</html>
