@@ -391,7 +391,10 @@
 
           <div class="mb-3 mt-3">
             <label class="form-label">Tags</label>
-            <input type="text" class="form-control mb-2" id="tagInput" placeholder="Type a tag and press Enter…">
+            <div class="input-group mb-2">
+              <input type="text" class="form-control" id="tagInput" placeholder="Type a tag and press Enter…">
+              <button type="button" class="rk-btn-outline rk-ripple" id="tagAddBtn"><i class="bi bi-plus-lg"></i></button>
+            </div>
             <div class="mb-2">
               <span class="text-body-secondary small d-block mb-1">Suggestions:</span>
               <span id="tagSuggestionList"></span>

@@ -25,7 +25,7 @@ const RecipeModal = (() => {
       <div class="rk-builder-row-grip"><i class="bi bi-grip-vertical"></i></div>
       <div class="row g-2 flex-grow-1 align-items-center">
         <div class="col-3 col-md-2">
-          <input type="text" inputmode="decimal" class="form-control form-control-sm rk-ing-qty" placeholder="e.g. 1/2" value="${ing.qty !== undefined && ing.qty !== '' ? rkFormatQty(ing.qty) : ''}">
+          <input type="text" inputmode="decimal" class="form-control form-control-sm rk-ing-qty" placeholder="e.g. 1/2 or 2-3" value="${ing.qty !== undefined && ing.qty !== '' ? rkFormatQty(ing.qty) : ''}">
         </div>
         <div class="col-4 col-md-3">
           <select class="form-select form-select-sm rk-ing-unit">
@@ -61,9 +61,7 @@ const RecipeModal = (() => {
     const id = row.dataset.ingId;
     const ing = ingredients.find((i) => i.id === id);
     if (!ing) return;
-    const rawQty = row.querySelector('.rk-ing-qty').value;
-    const parsedQty = rkParseQty(rawQty);
-    ing.qty = parsedQty !== null ? parsedQty : rawQty.trim();
+    ing.qty = row.querySelector('.rk-ing-qty').value.trim();
     const unitSel = row.querySelector('.rk-ing-unit').value;
     ing.unit = unitSel === '__custom__' ? row.querySelector('.rk-ing-unit-custom').value : unitSel;
     ing.name = row.querySelector('.rk-ing-name').value;
@@ -72,7 +70,8 @@ const RecipeModal = (() => {
 
   function initIngredientBuilder() {
     document.getElementById('addIngredientBtn')?.addEventListener('click', () => {
-      ingredients.push({ id: rkUid('ing'), qty: '', unit: 'cup', name: '', note: '' });
+      const defaultUnit = Storage.getSettings().defaultUnit || 'cup';
+      ingredients.push({ id: rkUid('ing'), qty: '', unit: defaultUnit, name: '', note: '' });
       renderIngredients();
       document.querySelector('#ingredientBuilder .rk-builder-row:last-child .rk-ing-qty')?.focus();
     });
@@ -226,12 +225,23 @@ const RecipeModal = (() => {
   function initTags() {
     renderTagSuggestions();
     const input = document.getElementById('tagInput');
+
+    function commitTagFromInput() {
+      if (!input.value.trim()) return;
+      addTag(input.value.replace(/,/g, ''));
+      input.value = '';
+      input.focus();
+    }
+
     input?.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ',') {
+      if (e.key === 'Enter' || e.key === ',' || e.keyCode === 13) {
         e.preventDefault();
-        addTag(input.value.replace(/,/g, ''));
-        input.value = '';
+        commitTagFromInput();
       }
+    });
+    document.getElementById('tagAddBtn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      commitTagFromInput();
     });
     document.getElementById('tagChipList')?.addEventListener('click', (e) => {
       const btn = e.target.closest('[data-remove-tag]');

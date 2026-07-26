@@ -155,10 +155,10 @@ function rkDifficultyBadgeClass(diff) {
   return { Easy: 'rk-badge-easy', Medium: 'rk-badge-medium', Hard: 'rk-badge-hard' }[diff] || 'rk-badge-easy';
 }
 
-/* ---------------- Quantity fractions (1/2, 1/4, 1 1/2 …) ---------------- */
+/* ---------------- Quantity fractions & ranges (1/2, 1/4, 2-3 kg …) ---------------- */
 const RK_COMMON_FRACTIONS = [[1,8],[1,4],[1,3],[3,8],[1,2],[5,8],[2,3],[3,4],[7,8]];
 
-// Accepts "1/2", "1 1/2", "0.5", "2" (typed by the user) and returns a number, or null.
+// Accepts "1/2", "1 1/2", "0.5", "2" (typed by the user) and returns a single number, or null.
 function rkParseQty(raw) {
   if (raw === null || raw === undefined) return null;
   const str = String(raw).trim();
@@ -178,13 +178,26 @@ function rkParseQty(raw) {
   return isNaN(val) ? null : val;
 }
 
-// Formats a number as a friendly cooking fraction: 0.5 -> "1/2", 1.75 -> "1 3/4".
-// Falls back to a plain (rounded) number when it isn't close to a common fraction.
-function rkFormatQty(value) {
-  if (value === null || value === undefined || value === '') return '';
-  const num = typeof value === 'number' ? value : rkParseQty(value);
-  if (num === null || isNaN(num)) return String(value);
+// Accepts a single value ("1/2") or a range ("2-3", "1/2-3/4") and returns { min, max }, or null
+// if it can't be parsed as a number at all (e.g. free text like "to taste").
+function rkParseQtyRange(raw) {
+  if (raw === null || raw === undefined) return null;
+  const str = String(raw).trim();
+  if (str === '') return null;
 
+  const dashIdx = str.indexOf('-');
+  if (dashIdx > 0) {
+    const min = rkParseQty(str.slice(0, dashIdx));
+    const max = rkParseQty(str.slice(dashIdx + 1));
+    if (min !== null && max !== null) return { min, max };
+  }
+  const single = rkParseQty(str);
+  return single !== null ? { min: single, max: single } : null;
+}
+
+// Formats a single number as a friendly cooking fraction: 0.5 -> "1/2", 1.75 -> "1 3/4".
+// Falls back to a plain (rounded) number when it isn't close to a common fraction.
+function rkFormatSingleQty(num) {
   const sign = num < 0 ? '-' : '';
   const abs = Math.abs(num);
   const whole = Math.floor(abs);
@@ -201,6 +214,17 @@ function rkFormatQty(value) {
 
   if (best) return `${sign}${whole > 0 ? `${whole} ` : ''}${best}`;
   return `${sign}${Math.round(abs * 100) / 100}`;
+}
+
+// Formats a stored quantity — a number, a fraction string, or a range like "2-3" — for display.
+// Non-numeric text (e.g. "to taste") passes through unchanged.
+function rkFormatQty(value) {
+  if (value === null || value === undefined || value === '') return '';
+  const range = rkParseQtyRange(value);
+  if (!range) return String(value);
+  const minStr = rkFormatSingleQty(range.min);
+  if (range.min === range.max) return minStr;
+  return `${minStr} - ${rkFormatSingleQty(range.max)}`;
 }
 
 /* ---------------- Instruction step time (supports "8-10" ranges) ---------------- */

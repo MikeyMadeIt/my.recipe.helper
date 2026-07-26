@@ -137,11 +137,12 @@ const Recipes = (() => {
   function scaleIngredients(ingredients, originalServings, newServings) {
     const factor = (Number(newServings) || 1) / (Number(originalServings) || 1);
     return ingredients.map((ing) => {
-      const qty = parseFloat(ing.qty);
-      if (isNaN(qty)) return Object.assign({}, ing);
-      const scaled = qty * factor;
-      const rounded = Math.round(scaled * 100) / 100;
-      return Object.assign({}, ing, { qty: rounded });
+      const range = rkParseQtyRange(ing.qty);
+      if (!range) return Object.assign({}, ing); // free text like "to taste" — leave as-is
+      const scaledMin = Math.round(range.min * factor * 100) / 100;
+      const scaledMax = Math.round(range.max * factor * 100) / 100;
+      const newQty = scaledMin === scaledMax ? scaledMin : `${scaledMin}-${scaledMax}`;
+      return Object.assign({}, ing, { qty: newQty });
     });
   }
 
